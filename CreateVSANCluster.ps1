@@ -652,7 +652,6 @@ if ($stretchedclusterenabled) {
                 write-host -ForegroundColor yellow "$($vsanvmhost) - Enabling traffictype Witness on VMK0 interface"
                 $esxcli.vsan.network.ip.add.invoke(@{interfacename="vmk0";traffictype="witness"})
             }
-            
         }
     }
 }
@@ -666,16 +665,20 @@ write-host -ForegroundColor Yellow " - Done"
 
 if ($stretchedclusterenabled) {
     write-host -foregroundcolor Yellow "$($vsancluster) - Configuring stretched cluster"
-
     if ($stretchedclusterwitnessisolation) {
         write-host "$($vsanwitnessvmhost) - Configuring Witness appliance for Witness network traffic seperation"
         $vsanwitnessvmhost |Get-VMHostNetworkAdapter -Name vmk0 | Set-VMHostNetworkAdapter -VsanTrafficEnabled:$true -Confirm:$false | out-null
         $vsanwitnessvmhost |Get-VMHostNetworkAdapter -Name vmk1 | Set-VMHostNetworkAdapter -VsanTrafficEnabled:$false -Confirm:$false | out-null
         write-host -ForegroundColor Yellow " - Done"
     }
-    write-host"$($vsancluster) - Configuring fault domains" -NoNewline
-    $VSANPreferredsite = New-VsanFaultDomain -Name "Preferred Site" -VMHost $vmhostprefferedsite
-    $VSANSecondarysite = New-VsanFaultDomain -Name "Secondary Site" -VMHost $vmhostsecondarysite
+    write-host "$($vsancluster) - Configuring fault domains" -NoNewline
+    if (Get-VsanFaultDomain -Cluster $vsancluster) {
+        write-host -ForegroundColor red " - Error"
+        write-host -ForegroundColor Yellow "Existing fault domains found -> will automatically be removed and re-created"
+        $oldVsanFaultDomains = Get-VsanFaultDomain -Cluster $vsancluster | Remove-VsanFaultDomain -Confirm:$false
+    }
+    $VSANPreferredsite = New-VsanFaultDomain -Name "Preferred Site" -VMHost $vmhostprefferedsite -Confirm:$false
+    $VSANSecondarysite = New-VsanFaultDomain -Name "Secondary Site" -VMHost $vmhostsecondarysite -Confirm:$false
     write-host -ForegroundColor Yellow " - Done"
     write-host "$($vsancluster) - Configuring VSAN Stretched Cluster" -NoNewline
     Get-VsanClusterConfiguration -Cluster $vsancluster | Set-VsanClusterConfiguration -StretchedClusterEnabled:$true -PreferredFaultDomain $VSANPreferredsite -WitnessHost $vsanwitnessvmhost -WitnessHostCacheDisk "mpx.vmhba1:C0:T2:L0" -WitnessHostCapacityDisk "mpx.vmhba1:C0:T1:L0" -Confirm:$false | Out-Null
