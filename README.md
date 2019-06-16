@@ -1,5 +1,6 @@
 # CreateVSANcluster---PowerCLI
 # Author: Dennis Lefeber
+# datacenterdennis.wordpress.com
 
 This PowerCLI script is used to enable VSAN on existing vSphere hosts as autonomously as possible.
 
