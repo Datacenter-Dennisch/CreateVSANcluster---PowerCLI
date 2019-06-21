@@ -1,14 +1,14 @@
 #checking PowerCLI modules
 write-host "Checking PowerCLI modules" -NoNewline
-if (!(get-module -Name VMware.*)) {
+if (!(get-module -Name VMware.* -ListAvailable)) {
     write-host -ForegroundColor red " - PowerCLI module not loaded, loading PowerCLI module"
     if (!(get-module -Name VMware.* -ListAvailable | Import-Module -ErrorAction SilentlyContinue)) {  
         # Error out if loading fails  
-        Write-Error "ERROR: Cannot load the VMware Module. Is the PowerCLI installed?"  
+        Write-Error "ERROR: Cannot load the VMware Module. Is PowerCLI installed?"  
      }  
 } else {
     write-host -ForegroundColor Yellow " - done"
-    write-host -foregroundcolor Yellow "Using PowerCLI version: $(Get-PowerCLIVersion)"
+    write-host -foregroundcolor Yellow "Using PowerCLI version: $(Get-Module -Name VMware.PowerCLI -ListAvailable | Select-Object -ExpandProperty Version)"
 }
 
 #checking vCenter connection
